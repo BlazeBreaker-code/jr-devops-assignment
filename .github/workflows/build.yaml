@@ -22,6 +22,12 @@ jobs:
       # Ensure CLI scripts have executable perms
       - name: Make CLI scripts executable
         run: chmod +x build.sh upload.sh
+
+      # Generate a date-based build version
+      - name: Generate Version
+        run: |
+          VERSION=$(date +'%Y.%m.%d').${{ github.run_number }}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
         
       # CLI call to simulated build process
       - name: Run Build
