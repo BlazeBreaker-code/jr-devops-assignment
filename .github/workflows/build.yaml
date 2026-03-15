@@ -24,6 +24,11 @@ jobs:
           appName="Test App"
           ./build.sh --platform Android --project-name "$appName"
 
+      # Debug: inspect build outputs
+      - name: List build dirs
+        run: |
+          ls -R
+
       # CLI call to simulated upload process
       - name: Upload
         env:
