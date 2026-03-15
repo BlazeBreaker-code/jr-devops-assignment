@@ -16,6 +16,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - buildPlatform: Android
+            uploadPlatform: android
+          - buildPlatform: iOS
+            uploadPlatform: ios
     defaults:
       run:
         working-directory: ./cli
@@ -38,7 +45,7 @@ jobs:
       - name: Run Build
         run: |
           appName="${{ inputs.appName }}"
-          buildCmd=(./build.sh --platform Android --project-name "$appName" --version "$VERSION")
+          buildCmd=(./build.sh --platform "${{ matrix.buildPlatform }}" --project-name "$appName" --version "$VERSION")
 
           if [ "${{ inputs.enableProfiling }}" = "true" ]; then
             buildCmd+=(--profile)
@@ -52,7 +59,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: profiling-build-${{ github.run_number }}
-          path: cli/build/Android/**
+          path: cli/build/${{ matrix.buildPlatform }}/**
 
       # CLI call to simulated upload process
       - name: Upload
@@ -60,6 +67,6 @@ jobs:
         env:
           UPLOAD_TOKEN: dummy-token
         run: |
-          for file in build/Android/*; do
-            ./upload.sh android "$file"
+          for file in build/${{ matrix.buildPlatform }}/*; do
+            ./upload.sh "${{ matrix.uploadPlatform }}" "$file"
           done
