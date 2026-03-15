@@ -33,7 +33,7 @@ jobs:
       - name: Run Build
         run: |
           appName="${{ inputs.appName }}"
-          ./build.sh --platform Android --project-name "$appName"
+          ./build.sh --platform Android --project-name "$appName" --version "$VERSION"
 
       # CLI call to simulated upload process
       - name: Upload
