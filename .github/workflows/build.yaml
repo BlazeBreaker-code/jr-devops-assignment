@@ -26,5 +26,7 @@ jobs:
 
       # CLI call to simulated upload process
       - name: Upload
+        env:
+          UPLOAD_TOKEN: dummy-token
         run: |
           ./upload.sh Android build/android
