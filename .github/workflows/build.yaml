@@ -7,6 +7,11 @@ on:
         description: "Custom application name"
         required: false
         default: "Test App"
+      enableProfiling: 
+        description: "Generate profiling-enabled build"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -33,7 +38,21 @@ jobs:
       - name: Run Build
         run: |
           appName="${{ inputs.appName }}"
-          ./build.sh --platform Android --project-name "$appName" --version "$VERSION"
+          buildCmd=(./build.sh --platform Android --project-name "$appName" --version "$VERSION")
+
+          if [ "${{ inputs.enableProfiling }}" = "true" ]; then
+            buildCmd+=(--profile)
+          fi
+
+          "${buildCmd[@]}"
+
+      # Save profiling build outputs
+      - name: Upload profiling artifacts
+        if: ${{ inputs.enableProfiling }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: profiling-build-${{ github.run_number }}
+          path: cli/build/Android/**
 
       # CLI call to simulated upload process
       - name: Upload
