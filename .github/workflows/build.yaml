@@ -29,4 +29,4 @@ jobs:
         env:
           UPLOAD_TOKEN: dummy-token
         run: |
-          ./upload.sh android build/android
+          ./upload.sh android build/Android
