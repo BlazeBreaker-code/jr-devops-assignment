@@ -58,7 +58,7 @@ jobs:
         if: ${{ inputs.enableProfiling }}
         uses: actions/upload-artifact@v4
         with:
-          name: profiling-build-${{ github.run_number }}
+          name: profiling-build-${{ matrix.buildPlatform }}-${{ github.run_number }}
           path: cli/build/${{ matrix.buildPlatform }}/**
 
       # CLI call to simulated upload process
