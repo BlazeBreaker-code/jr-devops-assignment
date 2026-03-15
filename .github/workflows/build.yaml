@@ -37,6 +37,7 @@ jobs:
 
       # CLI call to simulated upload process
       - name: Upload
+        if: github.ref == 'refs/heads/production'
         env:
           UPLOAD_TOKEN: dummy-token
         run: |
