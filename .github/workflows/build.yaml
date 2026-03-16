@@ -115,9 +115,7 @@ jobs:
       # CLI call to simulated upload process
       - name: Upload
         if: ${{ needs.prepare.outputs.should_upload == 'true' }}
+        working-directory: .
         env:
           UPLOAD_TOKEN: dummy-token
-        run: |
-          find "build/${{ matrix.buildPlatform }}" -type f | while read -r file; do
-            ./upload.sh "${{ matrix.uploadPlatform }}" "$file"
-          done
+        run: ./scripts/ci/run-upload.sh "${{ matrix.buildPlatform }}" "${{ matrix.uploadPlatform }}"
