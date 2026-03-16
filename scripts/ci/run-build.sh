@@ -6,7 +6,7 @@ app_name="${2:?app name required}"
 version="${3:?version required}"
 enable_profiling="${4:?profiling flag required}"
 
-cmd=(./build.sh --platform "$build_platform" --project-name "$app_name" --version "$version")
+cmd=(cli/build.sh --platform "$build_platform" --project-name "$app_name" --version "$version")
 
 if [ "$enable_profiling" = "true" ]; then
   cmd+=(--profile)
