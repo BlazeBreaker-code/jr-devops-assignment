@@ -7,10 +7,22 @@ on:
         description: "Custom application name"
         required: false
         default: "Test App"
+      enableProfiling: 
+        description: "Generate profiling-enabled build"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - buildPlatform: Android
+            uploadPlatform: android
+          - buildPlatform: iOS
+            uploadPlatform: ios
     defaults:
       run:
         working-directory: ./cli
@@ -33,7 +45,21 @@ jobs:
       - name: Run Build
         run: |
           appName="${{ inputs.appName }}"
-          ./build.sh --platform Android --project-name "$appName" --version "$VERSION"
+          buildCmd=(./build.sh --platform "${{ matrix.buildPlatform }}" --project-name "$appName" --version "$VERSION")
+
+          if [ "${{ inputs.enableProfiling }}" = "true" ]; then
+            buildCmd+=(--profile)
+          fi
+
+          "${buildCmd[@]}"
+
+      # Save profiling build outputs
+      - name: Upload profiling artifacts
+        if: ${{ inputs.enableProfiling }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: profiling-build-${{ matrix.buildPlatform }}-${{ github.run_number }}
+          path: cli/build/${{ matrix.buildPlatform }}/**
 
       # CLI call to simulated upload process
       - name: Upload
@@ -41,6 +67,6 @@ jobs:
         env:
           UPLOAD_TOKEN: dummy-token
         run: |
-          for file in build/Android/*; do
-            ./upload.sh android "$file"
+          for file in build/${{ matrix.buildPlatform }}/*; do
+            ./upload.sh "${{ matrix.uploadPlatform }}" "$file"
           done
