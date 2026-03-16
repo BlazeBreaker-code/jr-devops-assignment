@@ -93,19 +93,12 @@ jobs:
           chmod +x build.sh upload.sh
           chmod +x ../scripts/ci/*.sh
         
-      # CLI call to simulated build process
+      # Run platform build
       - name: Run Build
-        run: |
-          appName="${{ inputs.appName }}"
-          buildCmd=(./build.sh --platform "${{ matrix.buildPlatform }}" --project-name "$appName" --version "${{ needs.prepare.outputs.version }}")
+        working-directory: .
+        run: ./scripts/ci/run-build.sh "${{ matrix.buildPlatform }}" "${{ inputs.appName }}" "${{ needs.prepare.outputs.version }}" "${{ inputs.enableProfiling }}"
 
-          if [ "${{ inputs.enableProfiling }}" = "true" ]; then
-            buildCmd+=(--profile)
-          fi
-
-          "${buildCmd[@]}"
-
-      # Save profiling build outputs
+      # Publish build artifacts
       - name: Upload profiling artifacts
         if: ${{ inputs.enableProfiling }}
         uses: actions/upload-artifact@v4
@@ -113,7 +106,7 @@ jobs:
           name: profiling-build-${{ matrix.buildPlatform }}-${{ needs.prepare.outputs.version }}
           path: cli/build/${{ matrix.buildPlatform }}/**
 
-      # CLI call to simulated upload process
+      # Upload generated outputs when allowed
       - name: Upload
         if: ${{ needs.prepare.outputs.should_upload == 'true' }}
         working-directory: .
