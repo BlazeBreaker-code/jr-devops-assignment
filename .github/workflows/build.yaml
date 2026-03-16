@@ -104,7 +104,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ inputs.environment }}-${{ matrix.buildPlatform }}-${{ needs.prepare.outputs.version }}
-          path: cli/build/${{ matrix.uploadPlatform }}/**
+          path: cli/build/${{ matrix.buildPlatform }}/**
 
       # Upload generated outputs when allowed
       - name: Upload
