@@ -7,22 +7,79 @@ on:
         description: "Custom application name"
         required: false
         default: "Test App"
+        type: string
+
+      platform:
+        description: "Target platform to build"
+        required: true
+        default: Both
+        type: choice
+        options:
+          - Android
+          - iOS
+          - Both
+
       enableProfiling: 
         description: "Generate profiling-enabled build"
         required: false
         default: false
         type: boolean
 
+      version:
+        description: "Optional version override"
+        required: false
+        type: string
+      
+      upload:
+        description: "Upload generated build outputs"
+        required: false
+        default: false
+        type: boolean
+
+      environment:
+        description: "Build environment"
+        required: true
+        default: QA
+        type: choice
+        options:
+          - QA
+          - Staging
+          - Production
+
 jobs:
-  build:
+  prepare:
     runs-on: ubuntu-latest
+
+    outputs:
+      matrix: ${{ steps.config.outputs.matrix }}
+      version: ${{ steps.config.outputs.version }}
+      should_upload: ${{ steps.config.outputs.should_upload }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Make CI scripts executable
+        run: chmod +x scripts/ci/*.sh
+
+      - name: Prepare configuration
+        id: config
+        run: ./scripts/ci/prepare-config.sh
+        env:
+          INPUT_PLATFORM: ${{ inputs.platform }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_UPLOAD: ${{ inputs.upload }}
+          INPUT_ENVIRONMENT: ${{ inputs.environment }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+
     strategy:
-      matrix:
-        include:
-          - buildPlatform: Android
-            uploadPlatform: android
-          - buildPlatform: iOS
-            uploadPlatform: ios
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+
     defaults:
       run:
         working-directory: ./cli
@@ -34,18 +91,12 @@ jobs:
       # Ensure CLI scripts have executable perms
       - name: Make CLI scripts executable
         run: chmod +x build.sh upload.sh
-
-      # Generate a date-based build version
-      - name: Generate Version
-        run: |
-          VERSION=$(date +'%Y.%m.%d').${{ github.run_number }}
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
         
       # CLI call to simulated build process
       - name: Run Build
         run: |
           appName="${{ inputs.appName }}"
-          buildCmd=(./build.sh --platform "${{ matrix.buildPlatform }}" --project-name "$appName" --version "$VERSION")
+          buildCmd=(./build.sh --platform "${{ matrix.buildPlatform }}" --project-name "$appName" --version "${{ needs.prepare.outputs.version }}")
 
           if [ "${{ inputs.enableProfiling }}" = "true" ]; then
             buildCmd+=(--profile)
@@ -58,12 +109,12 @@ jobs:
         if: ${{ inputs.enableProfiling }}
         uses: actions/upload-artifact@v4
         with:
-          name: profiling-build-${{ matrix.buildPlatform }}-${{ github.run_number }}
+          name: profiling-build-${{ matrix.buildPlatform }}-${{ needs.prepare.outputs.version }}
           path: cli/build/${{ matrix.buildPlatform }}/**
 
       # CLI call to simulated upload process
       - name: Upload
-        if: github.ref == 'refs/heads/production'
+        if: ${{ needs.prepare.outputs.should_upload == 'true' }}
         env:
           UPLOAD_TOKEN: dummy-token
         run: |
