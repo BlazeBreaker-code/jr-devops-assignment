@@ -67,6 +67,7 @@ jobs:
         run: ./scripts/ci/prepare-config.sh
         env:
           INPUT_PLATFORM: ${{ inputs.platform }}
+          INPUT_ENABLE_PROFILING: ${{ inputs.enableProfiling }}
           INPUT_VERSION: ${{ inputs.version }}
           INPUT_UPLOAD: ${{ inputs.upload }}
           INPUT_ENVIRONMENT: ${{ inputs.environment }}
@@ -98,13 +99,12 @@ jobs:
         working-directory: .
         run: ./scripts/ci/run-build.sh "${{ matrix.buildPlatform }}" "${{ inputs.appName }}" "${{ needs.prepare.outputs.version }}" "${{ inputs.enableProfiling }}"
 
-      # Publish build artifacts
-      - name: Upload profiling artifacts
-        if: ${{ inputs.enableProfiling }}
+      # Upload build artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: profiling-build-${{ matrix.buildPlatform }}-${{ needs.prepare.outputs.version }}
-          path: cli/build/${{ matrix.buildPlatform }}/**
+          name: build-${{ inputs.environment }}-${{ matrix.buildPlatform }}-${{ needs.prepare.outputs.version }}
+          path: cli/build/${{ matrix.uploadPlatform }}/**
 
       # Upload generated outputs when allowed
       - name: Upload

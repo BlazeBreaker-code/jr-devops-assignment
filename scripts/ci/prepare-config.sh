@@ -4,6 +4,7 @@ set -euo pipefail
 platform="$INPUT_PLATFORM"
 upload_requested="$INPUT_UPLOAD"
 environment="$INPUT_ENVIRONMENT"
+enable_profiling="$INPUT_ENABLE_PROFILING"
 branch="$GITHUB_REF_NAME"
 
 if [ -n "$INPUT_VERSION" ]; then 
@@ -27,6 +28,11 @@ case "$platform" in
     exit 1
     ;;
 esac
+
+if [ "$environment" = "Production" ] && [ "$enable_profiling" = "true" ]; then
+  echo "Profiling is not allowed for production builds" >&2
+  exit 1
+fi
 
 should_upload="false"
 if [ "$upload_requested" = "true" ] && [ "$environment" = "Production" ] && [ "$branch" = "production" ]; then
