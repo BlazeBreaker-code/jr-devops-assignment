@@ -67,6 +67,6 @@ jobs:
         env:
           UPLOAD_TOKEN: dummy-token
         run: |
-          for file in build/${{ matrix.buildPlatform }}/*; do
+          find "build/${{ matrix.buildPlatform }}" -type f | while read -r file; do
             ./upload.sh "${{ matrix.uploadPlatform }}" "$file"
           done
