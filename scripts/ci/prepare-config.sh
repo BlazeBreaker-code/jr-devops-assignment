@@ -42,5 +42,4 @@ fi
 echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 echo "version=$version" >> "$GITHUB_OUTPUT"
 echo "should_upload=$should_upload" >> "$GITHUB_OUTPUT"
-echo "environment=$environment" >> "$GITHUB_OUTPUT"
     
